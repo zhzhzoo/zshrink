@@ -51,7 +51,7 @@ zomb_datastream_run(zomb_data_processor_t *proc, unsigned int cnt, void **arg, v
             }
         }
 
-        for (i = 1; i < cnt - 1; i++)
+        for (i = 1; i < cnt; i++)
             while (ds->data_recv[i] < ZOMB_TRUNK_SIZE
                     && ds->data_recv[i - 1] >= ZOMB_TRUNK_SIZE) {
                 ds->proc[i].process(ds->buffer[i - 1][ds->base[i - 1]],
@@ -69,7 +69,7 @@ zomb_datastream_run(zomb_data_processor_t *proc, unsigned int cnt, void **arg, v
 
     DEBUGPRINT("Finishing process functions\n");
 
-    for (i = 1; i < cnt - 1; i++) {
+    for (i = 1; i < cnt; i++) {
         while (ds->data_recv[i - 1] != 0) {
             if (ds->data_recv[i - 1] < ZOMB_TRUNK_SIZE) {
                 ds->proc[i].process(ds->buffer[i - 1][ds->base[i - 1]],
@@ -97,7 +97,7 @@ zomb_datastream_run(zomb_data_processor_t *proc, unsigned int cnt, void **arg, v
 
     *ret = malloc(sizeof(void*) * cnt);
     memset(*ret, 0, sizeof(void*) * cnt);
-    for (i = 0; i < cnt - 1; i++) {
+    for (i = 0; i < cnt; i++) {
         ds->proc[i].finalize(ds->ctx[i], (*ret) + i);
     }
 

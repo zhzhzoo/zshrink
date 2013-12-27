@@ -91,7 +91,7 @@ zshrink_decompress(zshrink *zs, char *dest_name, char *key)
         arg[0] = zs->fp;
         arg[1] = malloc(sizeof(char) * strlen(key));
         memcpy(arg[1], key, strlen(key));
-        arg[2] = &(zs->length_after);
+        arg[2] = &(zs->length_before);
         arg[3] = fout;
 
         DEBUGPRINT("Extracting encrypted\n");
@@ -105,7 +105,7 @@ zshrink_decompress(zshrink *zs, char *dest_name, char *key)
     else {
         fseek(zs->fp, 24, SEEK_SET);
         arg[0] = zs->fp;
-        arg[1] = &(zs->length_after);
+        arg[1] = &(zs->length_before);
         arg[2] = fout;
 
         DEBUGPRINT("Extracting non-encrypted\n");
