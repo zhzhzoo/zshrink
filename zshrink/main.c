@@ -33,7 +33,7 @@ main(int argc, char *argv[])
             exit(0);
         }
         if (zshrink_encrypted(f)) {
-            pwd = getpass("It's encrypted.\nPassword:");
+            pwd = "1995415";//getpass("It's encrypted.\nPassword:");
         }
         ret = zshrink_decompress(f, argv[3], pwd);
         if (ret != 0) {
@@ -47,7 +47,7 @@ main(int argc, char *argv[])
         DEBUGPRINT("compressing\n");
         pwd = 0;
         if (argc >= 5 && strcmp(argv[4], "-e") == 0) {
-            pwd = getpass("Password:");
+            pwd = "1995415";//getpass("Password:");
         }
         f = zshrink_compress(argv[2], argv[3], pwd);
         if (!f) {

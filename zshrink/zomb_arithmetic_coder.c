@@ -226,8 +226,8 @@ zomb_model_get_order3(zomb_model_t *mdl, int symbol, double *hi, double *lo)
     sym1 = mdl->last[1];
     appeared = mdl->appeared3[sym0][sym1];
     sum = mdl->sum3[sym0][sym1];
-    if (sum < 20) {
-        if (sum == 0) {
+    if (appeared < 20) {
+        if (appeared == 0) {
             *lo = 0, *hi = 1;
             escaped = 1;
             return escaped;
@@ -354,7 +354,7 @@ zomb_encode_process(void *data, unsigned int sz, void *ctx,
         DEBUGPRINT("Encoding char %02x\n", d[i]);
         while (escaped) {
             escaped = zomb_model_get(c->mdl, d[i], &hi, &lo);
-            DEBUGPRINT("    probablity range [%.3f, %.3f)\n", lo, hi);
+            DEBUGPRINT("    probablity range [%f, %f)\n", lo, hi);
             new_lo = (unsigned int)(((double)c->upper_bound + 1 - (double)c->lower_bound) * lo) + c->lower_bound;
             new_hi = (unsigned int)(((double)c->upper_bound + 1 - (double)c->lower_bound) * hi) + c->lower_bound - 1;
 
@@ -504,7 +504,7 @@ zomb_model_lookup_order3(zomb_model_t *mdl, double prob,
         mdl->escaped = 1;
         return 1;
     }
-    if (sum < 20) {
+    if (appeared < 20) {
         escaped = zomb_model_lookup_order3_array(mdl->order3[sym0][sym1], appeared, prob * (sum + 1), res_pt, hi_pt, lo_pt);
     }
     else {
@@ -578,11 +578,14 @@ zomb_decode_process(void *data, unsigned int sz, void *ctx,
                 break;
 
             case DECODE_NORMAL:
-                prob = ((double)c->code - c->lower_bound) / ((double)c->upper_bound + 1 - c->lower_bound);
+                if (c->remaining == 1) {
+                    DEBUGPRINT("1 rem");
+                }
+                prob = ((double)c->code + 1 - c->lower_bound) / ((double)c->upper_bound + 1 - c->lower_bound);
                 escaped = zomb_model_lookup(c->mdl, prob, &res, &hi, &lo);
                 new_lo = (unsigned int)(((double)c->upper_bound + 1 - (double)c->lower_bound) * lo) + c->lower_bound;
                 new_hi = (unsigned int)(((double)c->upper_bound + 1 - (double)c->lower_bound) * hi) + c->lower_bound - 1;
-                DEBUGPRINT("prob: %.03lf, range hit [%.03lf, %.03lf), char %02x\n", prob, lo, hi, res);
+                DEBUGPRINT("prob: %.010lf, range hit [%.010lf, %.010lf), char %02x\n", prob, lo, hi, res);
                 DEBUGPRINT("    code:%08x new_hi:%08x new_lo:%08x\n", c->code, new_hi, new_lo);
                 if (!escaped) {
                     zomb_decode_output(c, res, cb);
@@ -607,9 +610,11 @@ zomb_decode_process(void *data, unsigned int sz, void *ctx,
                     c->code = (c->code << 1) | ((d[i] >> pos) & 1);
                     pos--;
                     if (pos == 0) {
-                        new_hi = (new_hi << 1) | 1;
-                        new_lo = new_lo << 1;
-                        c->code = (c->code << 1) | ((d[i] >> pos) & 1);
+                        if (SAME_HIGHEST(new_hi, new_lo)) {
+                            new_hi = (new_hi << 1) | 1;
+                            new_lo = new_lo << 1;
+                            c->code = (c->code << 1) | ((d[i] >> pos) & 1);
+                        }
                         i++;
                         pos = 31;
                         goto outermost_continue;

@@ -82,15 +82,15 @@ zomb_datastream_run(zomb_data_processor_t *proc, unsigned int cnt, void **arg, v
 
             else {
                 ds->proc[i].process(ds->buffer[i - 1][ds->base[i - 1]],
-                                    ds->data_recv[i - 1],
+                                    ZOMB_TRUNK_SIZE,
                                     ds->ctx[i],
                                     zomb_datastream_callback);
                 ds->base[i - 1] = (ds->base[i - 1] + 1) % ZOMB_BUFFER_CNT;
                 ds->data_recv[i - 1] -= ZOMB_TRUNK_SIZE;
             }
-
-            ds->proc[i].process(0, 0, ds->ctx[i], zomb_datastream_callback);
         }
+
+        ds->proc[i].process(0, 0, ds->ctx[i], zomb_datastream_callback);
     }
 
     DEBUGPRINT("Calling finalize functions\n");
@@ -142,6 +142,15 @@ zomb_datastream_callback(void *data, unsigned int sz, void *datastream, int id) 
     ds->data_recv[id] += ZOMB_TRUNK_SIZE - cur_shift;
     cur_base =  (cur_base + 1) % ZOMB_BUFFER_CNT;
 
+    if (ds->data_recv[id] >= ZOMB_TRUNK_SIZE) {
+        ds->proc[id + 1].process(ds->buffer[id][ds->base[id]],
+                ZOMB_TRUNK_SIZE,
+                ds->ctx[id + 1],
+                zomb_datastream_callback);
+        ds->base[id] = (ds->base[id] + 1) % ZOMB_BUFFER_CNT;
+        ds->data_recv[id] -= ZOMB_TRUNK_SIZE;
+    }
+
     while (sz) {
         if (sz < ZOMB_TRUNK_SIZE) {
             memcpy(ds->buffer[id][cur_base], data, sz);
@@ -157,6 +166,13 @@ zomb_datastream_callback(void *data, unsigned int sz, void *datastream, int id) 
         ds->data_recv[id] += ZOMB_TRUNK_SIZE;
         sz -= ZOMB_TRUNK_SIZE;
         cur_base = (cur_base + 1) % ZOMB_BUFFER_CNT;
+
+        ds->proc[id + 1].process(ds->buffer[id][ds->base[id]],
+                ZOMB_TRUNK_SIZE,
+                ds->ctx[id + 1],
+                zomb_datastream_callback);
+        ds->base[id] = (ds->base[id] + 1) % ZOMB_BUFFER_CNT;
+        ds->data_recv[id] -= ZOMB_TRUNK_SIZE;
     }
     DEBUGPRINT("    base: %d recv: %d\n", ds->base[id], ds->data_recv[id]);
 }

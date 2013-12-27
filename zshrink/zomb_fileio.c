@@ -42,8 +42,10 @@ zomb_filein_process(void *data, unsigned int sz, void *ctx,
 
     bytes_read = fread(c->buf, 1, ZOMB_TRUNK_SIZE, c->fp);
     DEBUGPRINT("Reading data trunks, %d byte(s) read\n", bytes_read);
+    DEBUGPRINT("fp:%llx\n", (unsigned long long)c->fp);
     if (bytes_read != ZOMB_TRUNK_SIZE) {
         if (ferror(c->fp)) {
+            perror("");
             fprintf(stderr, "Read error\n");
             exit(-1);
         }
@@ -90,6 +92,9 @@ zomb_fileout_process(void *data, unsigned int sz, void *ctx,
                                     zomb_done_callback_pt cb)
 {
     zomb_file_ctx_t *c = (zomb_file_ctx_t *) ctx;
+
+    if (sz == 0)
+        return;
 
     DEBUGPRINT("Writing data, %d byte(s)\n", sz);
     fwrite(data, sz, 1, c->fp);
