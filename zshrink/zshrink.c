@@ -8,6 +8,9 @@
 #include "zomb_fileio.h"
 #include "zomb_encrypt.h"
 
+/*
+ * Open a zsr archive and return a pointer
+ */
 zshrink
 *zshrink_open(char *name) {
     zshrink *zsr;
@@ -60,6 +63,10 @@ zshrink
     return zsr;
 }
 
+/*
+ * Decompress a file zs to dest
+ * with passwd key
+ */
 int /* 0 success, -1 fail */
 zshrink_decompress(zshrink *zs, char *dest_name, char *key)
 {
@@ -125,6 +132,7 @@ zshrink_close(zshrink *zs) {
     free(zs);
 }
 
+/* fixme : prompt when overriding a file */
 zshrink*
 zshrink_compress(char *src_name, char *dest_name, char *key) {
     FILE *fin, *fout;

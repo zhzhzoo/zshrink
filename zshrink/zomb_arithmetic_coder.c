@@ -49,7 +49,20 @@ typedef struct {
     int                 id;
 } zomb_coder_t;
 
+/*
+ * -(x) == ~x + 1
+ * so if x is *********100..00 in binary
+ * ~x is then ?????????011..11
+ * -(x) being ?????????1000000
+ * where ***** and ????? are complementary
+ * thus ((x) & -(x)) returns the lowest bit of x
+ */
 #define lowbit(x) ((x) & -(x))
+/*
+ * for details, refer to 
+ * A New Data Structure for Cumulative Frequency Tables (1994)
+ *     by Peter M. Fenwick
+ */
 void
 zomb_bit_update(zomb_bit_t bit, unsigned int symbol, double delta)
 {
@@ -100,6 +113,9 @@ zomb_model_finalize(zomb_model_t *mdl) {
     free(mdl);
 }
 
+/*
+ * In order 1 model, statistics store in a bit.
+ */
 void
 zomb_model_update_order1(zomb_model_t *mdl, unsigned int symbol)
 {
@@ -107,6 +123,11 @@ zomb_model_update_order1(zomb_model_t *mdl, unsigned int symbol)
     mdl->sum1 += 1;
 }
 
+/* 
+ * In order 3 model, statistics store
+ * in an array if less than 20 elements appeared,
+ * in a bit if more than or equal to 20 elements appeared.
+ */
 void
 zomb_model_update_order3(zomb_model_t *mdl, unsigned int symbol)
 {
@@ -119,14 +140,14 @@ zomb_model_update_order3(zomb_model_t *mdl, unsigned int symbol)
     if (mdl->escaped) {
         mdl->escaped = 0;
         if (!appeared) {
-            //DEBUGPRINT("    Creating array\n");
+            DEBUGPRINT("    Creating array\n");
             mdl->order3[sym0][sym1] = malloc(sizeof(zomb_order3_array_t));
             arp = mdl->order3[sym0][sym1];
             arp->symbol[appeared] = symbol;
             arp->count[appeared] = 1;
         }
         else if (appeared == 19) {
-            //DEBUGPRINT("    Changing array into bit\n");
+            DEBUGPRINT("    Changing array into bit\n");
             arp = mdl->order3[sym0][sym1];
             mdl->order3[sym0][sym1] = malloc(sizeof(zomb_bit_t));
             for (i = 0; i < appeared; i++) {
@@ -135,20 +156,20 @@ zomb_model_update_order3(zomb_model_t *mdl, unsigned int symbol)
             free(arp);
         }
         else if (appeared < 19) {
-            //DEBUGPRINT("    Inserting into an array\n");
+            DEBUGPRINT("    Inserting into an array\n");
             arp = mdl->order3[sym0][sym1];
             arp->symbol[appeared] = symbol;
             arp->count[appeared] = 1;
         }
         else {
-            //DEBUGPRINT("    Inserting into bit\n");
+            DEBUGPRINT("    Inserting into bit\n");
             zomb_bit_update(mdl->order3[sym0][sym1], symbol, 1);
         }
         mdl->appeared3[sym0][sym1]++;
     }
     else {
         if (appeared <= 19) {
-            //DEBUGPRINT("    Looking up an array\n");
+            DEBUGPRINT("    Looking up an array\n");
             arp = mdl->order3[sym0][sym1];
             for (i = 0; i < appeared; i++) {
                 if (arp->symbol[i] == symbol) {
@@ -158,7 +179,7 @@ zomb_model_update_order3(zomb_model_t *mdl, unsigned int symbol)
             }
         }
         else {
-            //DEBUGPRINT("    Inserting into a bit\n");
+            DEBUGPRINT("    Inserting into a bit\n");
             zomb_bit_update(mdl->order3[sym0][sym1], symbol, 1);
         }
     }
@@ -168,7 +189,8 @@ zomb_model_update_order3(zomb_model_t *mdl, unsigned int symbol)
     mdl->last[1] = symbol;
 }
 
-void /*assume an update call follows immediately a(or 2 on escape) get call(s)*/
+/*assume an update call follows immediately a(or 2 on escape) get call(s)*/
+void
 zomb_model_update(zomb_model_t *mdl, unsigned int symbol)
 {
     zomb_model_update_order1(mdl, symbol);
@@ -288,6 +310,9 @@ zomb_encode_init(void **ctx_pt, void *ds, int id, void *arg)
     (*c)->outputed = 0;
 }
 
+/*
+ * This function is called each time 1 bit data is output.
+ */
 void
 zomb_coder_output(zomb_coder_t *ctx, unsigned int b, zomb_done_callback_pt cb)
 {
@@ -312,6 +337,7 @@ zomb_coder_output(zomb_coder_t *ctx, unsigned int b, zomb_done_callback_pt cb)
     }
 }
 
+/* Output all the remaining bits after encoding finished */
 void
 zomb_coder_output_anyway(zomb_coder_t *ctx, zomb_done_callback_pt cb)
 {
@@ -364,6 +390,8 @@ zomb_encode_process(void *data, unsigned int sz, void *ctx,
         while (escaped) {
             escaped = zomb_model_get(c->mdl, d[i], &hi, &lo);
             DEBUGPRINT("    probablity range [%f, %f)\n", lo, hi);
+
+            /* Here the range is cut by 20 to assure precision */
             new_lo = (unsigned int)(((double)c->upper_bound + 1 - (double)c->lower_bound) * lo) + c->lower_bound + 10;
             new_hi = (unsigned int)(((double)c->upper_bound + 1 - (double)c->lower_bound) * hi) + c->lower_bound - 10 - 1;
 
@@ -440,6 +468,9 @@ zomb_decode_init(void **ctx_pt, void *ds, int id, void *arg)
     (*c)->ds = ds;
 }
 
+/*
+ * Look up an character in the bit
+ */
 void
 zomb_bit_lookup(zomb_bit_t bit, double cnt, unsigned int *res_pt,
         double *hi_pt, double *lo_pt)
@@ -653,6 +684,10 @@ zomb_decode_process(void *data, unsigned int sz, void *ctx,
                 c->decode_status = DECODE_NORMAL;
                 goto outermost_continue;
 
+            /* 
+             * should shift some bits out
+             * but input is exhausted
+             */
             case DECODE_FINALIZE:
                 new_hi = c->upper_bound;
                 new_lo = c->lower_bound;

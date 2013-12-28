@@ -4,6 +4,16 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+typedef struct {
+    zomb_data_processor_t   *proc;
+    unsigned int            cnt;
+    void                    ***buffer;
+    unsigned int            *data_recv;
+    unsigned int            *base;
+    void                    **ctx;
+    int                     finishing;
+} zomb_datastream_t;
+
 void
 zomb_datastream_run(zomb_data_processor_t *proc, unsigned int cnt, void **arg, void ***ret)
 {
