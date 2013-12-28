@@ -2,3 +2,4 @@ build/*
 !build
 **/.*.swp
 **/.qmake.stash
+总结和说明.txt
