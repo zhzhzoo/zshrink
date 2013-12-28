@@ -51,7 +51,7 @@ main(int argc, char *argv[])
         }
         f = zshrink_compress(argv[2], argv[3], pwd);
         if (!f) {
-            printf("Some error occured..\n");
+            printf("Cannot open input file......\n");
             return -1;
         }
         zshrink_close(f);
