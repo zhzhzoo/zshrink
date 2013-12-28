@@ -9,8 +9,8 @@ void
 display_help()
 {
     printf("zshrink -- (de)compress an alnum file.\n"
-           "\tusage zshrink x INPUT OUTPUT      : extract a file\n"
-           "\t      zshrink c INPUT OUTPUT [-e] : compress a file\n"
+           "\tusage zshrink -x INPUT OUTPUT      : extract a file\n"
+           "\t      zshrink -c INPUT OUTPUT [-e] : compress a file\n"
            "\t                                        -e to enable encryption\n");
 }
 
