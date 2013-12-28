@@ -8,9 +8,9 @@
 void
 display_help()
 {
-    printf("zshrink -- compress an alnum file.\n"
-           "\tusage zshrink x <input> <output> : extract a file\n"
-           "\t      zshrink c <input> <output> [-e] : compress a file\n"
+    printf("zshrink -- (de)compress an alnum file.\n"
+           "\tusage zshrink x INPUT OUTPUT      : extract a file\n"
+           "\t      zshrink c INPUT OUTPUT [-e] : compress a file\n"
            "\t                                        -e to enable encryption\n");
 }
 
@@ -25,7 +25,7 @@ main(int argc, char *argv[])
         return 0;
     }
 
-    if (strcmp(argv[1], "x") == 0) {
+    if (strcmp(argv[1], "-x") == 0) {
         DEBUGPRINT("extracting\n");
         f = zshrink_open(argv[2]);
         if (!f) {
@@ -43,7 +43,7 @@ main(int argc, char *argv[])
         zshrink_close(f);
     }
 
-    else if(strcmp(argv[1], "c") == 0) {
+    else if(strcmp(argv[1], "-c") == 0) {
         DEBUGPRINT("compressing\n");
         pwd = 0;
         if (argc >= 5 && strcmp(argv[4], "-e") == 0) {

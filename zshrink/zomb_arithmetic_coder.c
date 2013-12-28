@@ -51,19 +51,19 @@ typedef struct {
 
 #define lowbit(x) ((x) & -(x))
 void
-zomb_bit_update(zomb_bit_t bit, int symbol, double delta)
+zomb_bit_update(zomb_bit_t bit, unsigned int symbol, double delta)
 {
-    int i;
+    unsigned int i;
     for (i = symbol + 1; i <= 256; i += lowbit(i)) {
         bit[i] += delta;
     }
 }
 
 double
-zomb_bit_get(zomb_bit_t bit, int symbol)
+zomb_bit_get(zomb_bit_t bit, unsigned int symbol)
 {
     double res = 0;
-    int i;
+    unsigned int i;
     for (i = symbol + 1; i > 0; i -= lowbit(i)) {
         res += bit[i];
     }
@@ -101,14 +101,14 @@ zomb_model_finalize(zomb_model_t *mdl) {
 }
 
 void
-zomb_model_update_order1(zomb_model_t *mdl, int symbol)
+zomb_model_update_order1(zomb_model_t *mdl, unsigned int symbol)
 {
     zomb_bit_update(mdl->order1, symbol, 1);
     mdl->sum1 += 1;
 }
 
 void
-zomb_model_update_order3(zomb_model_t *mdl, int symbol)
+zomb_model_update_order3(zomb_model_t *mdl, unsigned int symbol)
 {
     int sym0, sym1, appeared, i;
     zomb_order3_array_t *arp;
@@ -119,14 +119,14 @@ zomb_model_update_order3(zomb_model_t *mdl, int symbol)
     if (mdl->escaped) {
         mdl->escaped = 0;
         if (!appeared) {
-            DEBUGPRINT("    Creating array\n");
+            //DEBUGPRINT("    Creating array\n");
             mdl->order3[sym0][sym1] = malloc(sizeof(zomb_order3_array_t));
             arp = mdl->order3[sym0][sym1];
             arp->symbol[appeared] = symbol;
             arp->count[appeared] = 1;
         }
         else if (appeared == 19) {
-            DEBUGPRINT("    Changing array into bit\n");
+            //DEBUGPRINT("    Changing array into bit\n");
             arp = mdl->order3[sym0][sym1];
             mdl->order3[sym0][sym1] = malloc(sizeof(zomb_bit_t));
             for (i = 0; i < appeared; i++) {
@@ -135,20 +135,20 @@ zomb_model_update_order3(zomb_model_t *mdl, int symbol)
             free(arp);
         }
         else if (appeared < 19) {
-            DEBUGPRINT("    Inserting into an array\n");
+            //DEBUGPRINT("    Inserting into an array\n");
             arp = mdl->order3[sym0][sym1];
             arp->symbol[appeared] = symbol;
             arp->count[appeared] = 1;
         }
         else {
-            DEBUGPRINT("    Inserting into bit\n");
+            //DEBUGPRINT("    Inserting into bit\n");
             zomb_bit_update(mdl->order3[sym0][sym1], symbol, 1);
         }
         mdl->appeared3[sym0][sym1]++;
     }
     else {
         if (appeared <= 19) {
-            DEBUGPRINT("    Looking up an array\n");
+            //DEBUGPRINT("    Looking up an array\n");
             arp = mdl->order3[sym0][sym1];
             for (i = 0; i < appeared; i++) {
                 if (arp->symbol[i] == symbol) {
@@ -158,7 +158,7 @@ zomb_model_update_order3(zomb_model_t *mdl, int symbol)
             }
         }
         else {
-            DEBUGPRINT("    Inserting into a bit\n");
+            //DEBUGPRINT("    Inserting into a bit\n");
             zomb_bit_update(mdl->order3[sym0][sym1], symbol, 1);
         }
     }
@@ -169,14 +169,14 @@ zomb_model_update_order3(zomb_model_t *mdl, int symbol)
 }
 
 void /*assume an update call follows immediately a(or 2 on escape) get call(s)*/
-zomb_model_update(zomb_model_t *mdl, int symbol)
+zomb_model_update(zomb_model_t *mdl, unsigned int symbol)
 {
     zomb_model_update_order1(mdl, symbol);
     zomb_model_update_order3(mdl, symbol);
 }
 
 void
-zomb_model_get_order1(zomb_model_t *mdl, int symbol, double *hi, double *lo)
+zomb_model_get_order1(zomb_model_t *mdl, unsigned int symbol, double *hi, double *lo)
 {
     *hi = zomb_bit_get(mdl->order1, symbol);
     *lo = zomb_bit_get(mdl->order1, symbol - 1);
@@ -185,7 +185,7 @@ zomb_model_get_order1(zomb_model_t *mdl, int symbol, double *hi, double *lo)
 }
 
 int /*1 if escaped, 0 else*/
-zomb_model_get_order3_array(zomb_order3_array_t *ar, int appeared, int symbol,
+zomb_model_get_order3_array(zomb_order3_array_t *ar, int appeared, unsigned int symbol,
         double *hi, double *lo)
 {
     int i;
@@ -204,7 +204,7 @@ zomb_model_get_order3_array(zomb_order3_array_t *ar, int appeared, int symbol,
 }
 
 int /*1 if escaped, 0 else*/
-zomb_model_get_order3_bit(zomb_bit_t bit, int symbol,
+zomb_model_get_order3_bit(zomb_bit_t bit, unsigned int symbol,
         double *hi, double *lo)
 {
     *hi = zomb_bit_get(bit, symbol);
@@ -217,7 +217,8 @@ zomb_model_get_order3_bit(zomb_bit_t bit, int symbol,
 }
 
 int /*1 if escaped, 0 else*/
-zomb_model_get_order3(zomb_model_t *mdl, int symbol, double *hi, double *lo)
+zomb_model_get_order3(zomb_model_t *mdl, unsigned int symbol,
+        double *hi, double *lo)
 {
     int escaped, appeared, sym0, sym1;
     double sum;
@@ -253,7 +254,8 @@ zomb_model_get_order3(zomb_model_t *mdl, int symbol, double *hi, double *lo)
 }
 
 int /*1 if escaped, 0 else*/
-zomb_model_get(zomb_model_t *mdl, int symbol, double *hi, double *lo)
+zomb_model_get(zomb_model_t *mdl, unsigned int symbol,
+        double *hi, double *lo)
 {
     if (mdl->escaped) {
         zomb_model_get_order1(mdl, symbol, hi, lo);
@@ -289,7 +291,9 @@ zomb_encode_init(void **ctx_pt, void *ds, int id, void *arg)
 void
 zomb_coder_output(zomb_coder_t *ctx, unsigned int b, zomb_done_callback_pt cb)
 {
+#ifdef DEBUG
     static bit_cnt;
+#endif
     ctx->byte_buf <<= 1;
     ctx->byte_mask <<= 1;
     DEBUGPRINT("output bit%d: %d\n", ++bit_cnt, b);
@@ -345,11 +349,13 @@ zomb_encode_process(void *data, unsigned int sz, void *ctx,
         zomb_done_callback_pt cb)
 {
     zomb_coder_t *c = (zomb_coder_t *) ctx;
-    char *d = (char *) data;
+    unsigned char *d = (unsigned char *) data;
     unsigned int i, escaped;
     unsigned int new_hi, new_lo, mid;
     double hi, lo;
+#ifdef DEBUG
     static cnt;
+#endif
 
     DEBUGPRINT("Encode processing lo:%08x hi:%08x\n", c->lower_bound, c->upper_bound);
     for (i = 0; i < sz; i++) {
@@ -358,8 +364,8 @@ zomb_encode_process(void *data, unsigned int sz, void *ctx,
         while (escaped) {
             escaped = zomb_model_get(c->mdl, d[i], &hi, &lo);
             DEBUGPRINT("    probablity range [%f, %f)\n", lo, hi);
-            new_lo = (unsigned int)(((double)c->upper_bound + 1 - (double)c->lower_bound) * lo) + c->lower_bound;
-            new_hi = (unsigned int)(((double)c->upper_bound + 1 - (double)c->lower_bound) * hi) + c->lower_bound - 1;
+            new_lo = (unsigned int)(((double)c->upper_bound + 1 - (double)c->lower_bound) * lo) + c->lower_bound + 10;
+            new_hi = (unsigned int)(((double)c->upper_bound + 1 - (double)c->lower_bound) * hi) + c->lower_bound - 10 - 1;
 
             DEBUGPRINT("    new hi:%08x lo:%08x\n", new_hi, new_lo);
             while (SAME_HIGHEST(new_hi, new_lo)) {
@@ -387,6 +393,8 @@ zomb_encode_process(void *data, unsigned int sz, void *ctx,
     }
 
     if (sz == 0) {
+        while (c->underflow--)
+            zomb_coder_output(ctx, 1, cb);
         mid = new_lo + (new_hi - new_lo + 1) / 2;
         while (new_hi != ~0u && new_lo != 0) {
             zomb_coder_output(ctx, mid >> 31, cb);
@@ -433,7 +441,7 @@ zomb_decode_init(void **ctx_pt, void *ds, int id, void *arg)
 }
 
 void
-zomb_bit_lookup(zomb_bit_t bit, double cnt, int *res_pt,
+zomb_bit_lookup(zomb_bit_t bit, double cnt, unsigned int *res_pt,
         double *hi_pt, double *lo_pt)
 {
     unsigned int mask;
@@ -449,8 +457,8 @@ zomb_bit_lookup(zomb_bit_t bit, double cnt, int *res_pt,
 }
 
 void
-zomb_model_lookup_order1(zomb_model_t *mdl, double prob, int *res_pt,
-        double *hi_pt, double *lo_pt)
+zomb_model_lookup_order1(zomb_model_t *mdl, double prob,
+        unsigned int *res_pt, double *hi_pt, double *lo_pt)
 {
     zomb_bit_lookup(mdl->order1, prob * mdl->sum1, res_pt, hi_pt, lo_pt);
     *hi_pt /= mdl->sum1;
@@ -459,7 +467,7 @@ zomb_model_lookup_order1(zomb_model_t *mdl, double prob, int *res_pt,
 
 int /*1 escaped 0 else*/
 zomb_model_lookup_order3_array(zomb_order3_array_t *ar, int appeared,
-        double cnt, int *res_pt, double *hi_pt, double *lo_pt)
+        double cnt, unsigned int *res_pt, double *hi_pt, double *lo_pt)
 {
     int i;
     *lo_pt = 0;
@@ -479,7 +487,7 @@ zomb_model_lookup_order3_array(zomb_order3_array_t *ar, int appeared,
 
 int /*1 escaped 0 else*/
 zomb_model_lookup_order3_bit(zomb_bit_t bit, double prob,
-        double sum, int *res_pt, double *hi_pt, double *lo_pt)
+        double sum, unsigned int *res_pt, double *hi_pt, double *lo_pt)
 {
     zomb_bit_lookup(bit, prob * (sum + 1), res_pt, hi_pt, lo_pt);
 
@@ -491,7 +499,7 @@ zomb_model_lookup_order3_bit(zomb_bit_t bit, double prob,
 
 int /*1 escaped 0 else*/
 zomb_model_lookup_order3(zomb_model_t *mdl, double prob,
-        int *res_pt, double *hi_pt, double *lo_pt)
+        unsigned int *res_pt, double *hi_pt, double *lo_pt)
 {
     int escaped, appeared, sym0, sym1;
     double sum;
@@ -525,7 +533,7 @@ zomb_model_lookup_order3(zomb_model_t *mdl, double prob,
 }
 
 int /*1 escaped 0 else*/
-zomb_model_lookup(zomb_model_t *mdl, double prob, int *res_pt,
+zomb_model_lookup(zomb_model_t *mdl, double prob, unsigned int *res_pt,
         double *hi_pt, double *lo_pt)
 {
     if(mdl->escaped) {
@@ -538,7 +546,8 @@ zomb_model_lookup(zomb_model_t *mdl, double prob, int *res_pt,
 }
 
 void
-zomb_decode_output(zomb_coder_t *c, int symbol, zomb_done_callback_pt cb) {
+zomb_decode_output(zomb_coder_t *c, unsigned int symbol,
+        zomb_done_callback_pt cb) {
     char s = symbol;
     char *buf = (char *)c->buffer;
     buf[c->buf_p++] = s;
@@ -562,13 +571,15 @@ zomb_decode_process(void *data, unsigned int sz, void *ctx,
     unsigned char *d = (unsigned char *)data;
     unsigned int i, escaped;
     unsigned int pos;
-    int res;
+    unsigned int res;
     double prob, hi, lo;
     unsigned int new_hi, new_lo;
+#ifdef DEBUG
     static cnt;
+#endif
 
     DEBUGPRINT("Decode processing, %llu byte(s) remaining. data size %d\n", c->remaining, sz);
-    if (c->decode_status == DECODE_SHIFT)
+    if (c->decode_status == DECODE_SHIFT && sz == 0)
         c->decode_status = DECODE_FINALIZE;
     i = 0;
     pos = 7;
@@ -583,15 +594,16 @@ zomb_decode_process(void *data, unsigned int sz, void *ctx,
                 break;
 
             case DECODE_NORMAL:
-                prob = ((double)c->code + 1 - c->lower_bound) / ((double)c->upper_bound + 1 - c->lower_bound);
+                prob = ((double)c->code - c->lower_bound) / ((double)c->upper_bound + 1 - c->lower_bound);
                 escaped = zomb_model_lookup(c->mdl, prob, &res, &hi, &lo);
-                new_lo = (unsigned int)(((double)c->upper_bound + 1 - (double)c->lower_bound) * lo) + c->lower_bound;
-                new_hi = (unsigned int)(((double)c->upper_bound + 1 - (double)c->lower_bound) * hi) + c->lower_bound - 1;
+                new_lo = (unsigned int)(((double)c->upper_bound + 1 - (double)c->lower_bound) * lo) + c->lower_bound + 10;
+                new_hi = (unsigned int)(((double)c->upper_bound + 1 - (double)c->lower_bound) * hi) + c->lower_bound - 10 - 1;
 
-                DEBUGPRINT("prob: %.010lf, range hit [%.010lf, %.010lf), char %02x\n", prob, lo, hi, res);
+                DEBUGPRINT("prob: %.010lf, range hit [%.010lf, %.010lf), char %d\n", prob, lo, hi, res);
                 DEBUGPRINT("    code:%08x new_hi:%08x new_lo:%08x\n", c->code, new_hi, new_lo);
                 if (!escaped) {
                     zomb_decode_output(c, res, cb);
+                    res &= 0xff;
                     DEBUGPRINT("output chr[%d] %02x\n", ++cnt, res);
                     zomb_model_update(c->mdl, res);
                     c->remaining--;
@@ -615,7 +627,7 @@ zomb_decode_process(void *data, unsigned int sz, void *ctx,
                     new_hi = (new_hi << 1) | 1;
                     new_lo = new_lo << 1;
                     c->code = (c->code << 1) | ((d[i] >> pos) & 1);
-                    DEBUGPRINT("    shift in[%d,%d] %d\n", i, pos, (d[i] >> pos) & 1);
+                    //DEBUGPRINT("    shift in[%d,%d] %d\n", i, pos, (d[i] >> pos) & 1);
                     pos--;
                     if (pos + 1 == 0) {
                         i++;
@@ -628,7 +640,7 @@ zomb_decode_process(void *data, unsigned int sz, void *ctx,
                     new_hi = HIGHEST_MOST(new_hi) | ((new_hi & (~0u >> 2)) << 1) | 1;
                     new_lo = HIGHEST_MOST(new_lo) | ((new_lo & (~0u >> 2)) << 1);
                     c->code = HIGHEST_MOST(c->code) | ((c->code & (~0u >> 2)) << 1) | ((d[i] >> pos) & 1);
-                    DEBUGPRINT("    shift in[%d,%d] %d\n", i, pos, (d[i] >> pos) & 1);
+                    //DEBUGPRINT("    shift in[%d,%d] %d\n", i, pos, (d[i] >> pos) & 1);
                     pos--;
                     if (pos + 1 == 0) {
                         i++;
@@ -658,6 +670,7 @@ zomb_decode_process(void *data, unsigned int sz, void *ctx,
                 }
 
                 c->decode_status = DECODE_NORMAL;
+                DEBUGPRINT("    shifted hi:%08x lo:%08x\n", new_hi, new_lo);
                 goto outermost_continue;
 
 outermost_continue:

@@ -1,0 +1,53 @@
+.Dd December 28, 2013
+.Dt ZSHRINK 1
+.Os
+.Sh NAME
+.Nm zshrink
+.Nd (de)compress an alnum file
+.Sh SYNOPSIS
+.Nm
+.Brq Fl c
+.Ar source_file Ar archive_name
+.Op Fl e
+.Nm
+.Brq Fl x
+.Ar archive_name Ar target_file
+.Sh DESCRIPTION
+.Nm
+creates and decompresses zsr archives.
+It can also encrypt the archive after compression.
+
+The first option is a mode indicator:
+.Bl -tag -compact -width indent
+.It Fl c
+Create a new archive containing the specified file.
+.It Fl x
+Extract from the archive.
+.Sh OPTIONS
+.Bl -tag -width indent
+.It Fl e
+(c mode only)Enable encryption.
+If specified, password will be asked from the terminal.
+.Sh EXIT STATUS
+The
+.Nm
+exits 0 on success, and !=0 if an error occurs.
+.Sh EXAMPLES
+The following creates a new archive called
+.Ar file.zsr
+that contains a file
+.Ar source.c :
+.Dl Nm Fl c Pa source.c Pa file.zsr
+.Pp
+To enable encryption:
+.Dl Nm Fl c Pa source.c Pa file.zsr Fl e
+.Pp
+To extract a file:
+.Dl Nm Fl x Pa file.zsr Pa source.c
+.Sh BUGS
+To extract an encrypted file with a wrong password 
+will result in a randomly padded file rather than
+an error.
+.Pp
+If a non-alnum file is inputed, the behaviour will
+be undefined and no error will be generated.
