@@ -1,4 +1,5 @@
 #include "zomb_encrypt.h"
+#include "zshrink_utilities.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -28,6 +29,7 @@ zomb_encrypt_init(void **ctx_pt, void *ds, int id, void *arg)
         (*c)->key *= str[i];
         (*c)->key = (*c)->key * 5 + 1;
     }
+    DEBUGPRINT("key is %08x\n", (*c)->key);
     (*c)->id = id;
     (*c)->ds = ds;
 }

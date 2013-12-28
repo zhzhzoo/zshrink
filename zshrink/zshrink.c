@@ -74,7 +74,7 @@ zshrink_decompress(zshrink *zs, char *dest_name, char *key)
     encrypt[0] = zomb_filein;
     encrypt[1] = zomb_encrypt;
     encrypt[2] = zomb_decoder;
-    encrypt[3] = zomb_filein;
+    encrypt[3] = zomb_fileout;
     DEBUGPRINT("Opening output %s\n", dest_name);
     fout = fopen(dest_name, "wb");
     if (fout == 0) {
