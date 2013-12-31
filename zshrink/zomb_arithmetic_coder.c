@@ -22,8 +22,8 @@ typedef struct {
 } zomb_model_t;
 
 typedef struct {
-    char    symbol[21];
-    double  count[21];
+    unsigned char   symbol[21];
+    double          count[21];
 } zomb_order3_array_t;
 
 typedef struct {
@@ -151,6 +151,7 @@ zomb_model_update_order3(zomb_model_t *mdl, unsigned int symbol)
             arp = mdl->order3[sym0][sym1];
             mdl->order3[sym0][sym1] = malloc(sizeof(zomb_bit_t));
             for (i = 0; i < appeared; i++) {
+                DEBUGPRINT("looping[%02x][%02x] %02x %lf\n", sym0, sym1, arp->symbol[i], arp->count[i]);
                 zomb_bit_update(mdl->order3[sym0][sym1], arp->symbol[i], arp->count[i]);
             }
             free(arp);
@@ -247,6 +248,9 @@ zomb_model_get_order3(zomb_model_t *mdl, unsigned int symbol,
 
     sym0 = mdl->last[0];
     sym1 = mdl->last[1];
+    if (sym0 == 0xff && sym1 == 0xff) {
+        DEBUGPRINT("zzzzzzzffff\n");
+    }
     appeared = mdl->appeared3[sym0][sym1];
     sum = mdl->sum3[sym0][sym1];
     if (appeared < 20) {
@@ -321,7 +325,7 @@ zomb_coder_output(zomb_coder_t *ctx, unsigned int b, zomb_done_callback_pt cb)
 #endif
     ctx->byte_buf <<= 1;
     ctx->byte_mask <<= 1;
-    DEBUGPRINT("output bit%d: %d\n", ++bit_cnt, b);
+    //DEBUGPRINT("output bit%d: %d\n", ++bit_cnt, b);
     if (b) {
         ctx->byte_buf |= 1;
     }
@@ -635,7 +639,7 @@ zomb_decode_process(void *data, unsigned int sz, void *ctx,
                 if (!escaped) {
                     zomb_decode_output(c, res, cb);
                     res &= 0xff;
-                    DEBUGPRINT("output chr[%d] %02x\n", ++cnt, res);
+                    //DEBUGPRINT("output chr[%d] %02x\n", ++cnt, res);
                     zomb_model_update(c->mdl, res);
                     c->remaining--;
                     if (c->remaining == 0) {
